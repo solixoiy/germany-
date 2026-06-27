@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Germany Solar | Inscription</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght=700&family=Roboto:wght=400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            background-color: #111111; /* Fond Noir */
+            color: white;
+        }
+
+        .logo-wrapper { text-align: center; margin-bottom: 30px; }
+        .logo-container {
+            display: inline-block;
+            background: #facc15; /* Fond Jaune */
+            padding: 10px 20px;
+            border: 3px solid white;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .v-top {
+            background: #facc15;
+            border: 3px solid white;
+            border-bottom: none;
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            top: -38px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #111111; /* Texte Noir */
+            font-family: 'Oswald', sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 5px 5px 0 0;
+        }
+        .main-text {
+            color: #111111; /* Texte Noir */
+            font-family: 'Oswald', sans-serif;
+            font-size: 24px;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+        }
+        .slogan {
+            color: #facc15; /* Slogan Jaune */
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-top: 8px;
+            letter-spacing: 1.5px;
+        }
+
+        .input-group {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            border: 2px solid #facc15; /* Contour Jaune */
+        }
+        .input-group input {
+            background: transparent;
+            border: none;
+            width: 100%;
+            color: #333;
+            outline: none;
+            font-size: 15px;
+        }
+        .input-group span {
+            color: #111111; /* Code pays en Noir */
+            font-weight: bold;
+            margin-right: 10px;
+            border-right: 1px solid #ccc;
+            padding-right: 10px;
+        }
+        .btn-register {
+            background-color: #facc15; /* Bouton Jaune */
+            color: #111111; /* Texte Noir */
+            width: 100%;
+            padding: 15px;
+            border-radius: 50px;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: 0.3s;
+        }
+        .btn-register:active { transform: scale(0.98); }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-6">
+
+    <div class="w-full max-w-sm">
+        <div class="logo-wrapper">
+            <div class="logo-container">
+                <div class="v-top">G</div>
+                <div class="main-text">
+                    GERMANY SOLAR <i class="fa-solid fa-sun text-xl text-[#111111]"></i>
+                </div>
+            </div>
+            <div class="slogan">Investissez dans l'énergie solaire</div>
+        </div>
+
+        <p class="text-center mb-8 font-bold text-lg tracking-wider text-[#facc15]">INSCRIPTION DU COMPTE</p>
+
+        <form id="regForm">
+            <div class="input-group">
+                <input type="text" id="name" placeholder="Nom complet" required>
+            </div>
+            
+            <div class="input-group">
+                <span>+243</span>
+                <input type="tel" id="phone" placeholder="Numéro de téléphone" required>
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="pin" placeholder="Mot de passe (6 chiffres)" inputmode="numeric" maxlength="6" required>
+            </div>
+            
+            <div class="input-group">
+                <input type="password" id="pinConfirm" placeholder="Confirmer le mot de passe" inputmode="numeric" maxlength="6" required>
+            </div>
+            
+            <div class="input-group">
+                <input type="text" id="ref" placeholder="Code d'invitation (Optionnel)">
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn-register">S'INSCRIRE MAINTENANT</button>
+        </form>
+
+        <div class="mt-8 text-center">
+            <p class="text-white">Déjà membre ? <a href="index.html" class="font-bold text-[#facc15] underline">Connectez-vous ici</a></p>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION FIREBASE (Inchangée)
+        const firebaseConfig = {
+            databaseURL: "https://firstsolar-e2ba3-default-rtdb.firebaseio.com/"
+        };
+        
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // RÉCUPÉRATION AUTOMATIQUE DU CODE DE PARRAINAGE DANS L'URL
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+            if (refCode) {
+                document.getElementById('ref').value = refCode;
+                document.getElementById('ref').readOnly = true;
+            }
+        };
+
+        document.getElementById('regForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const pin = document.getElementById('pin').value;
+            const pinConfirm = document.getElementById('pinConfirm').value;
+            const referrerId = document.getElementById('ref').value;
+            const btn = document.getElementById('submitBtn');
+
+            if (pin.length !== 6) {
+                alert("Le code PIN doit avoir 6 chiffres.");
+                return;
+            }
+            if (pin !== pinConfirm) {
+                alert("Les codes PIN ne correspondent pas.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "PATIENTEZ...";
+
+            // Vérifier si le numéro existe déjà
+            db.ref('users').orderByChild('phone').equalTo(phone).once('value', snapshot => {
+                if (snapshot.exists()) {
+                    alert("Ce numéro est déjà utilisé.");
+                    btn.disabled = false;
+                    btn.innerText = "S'INSCRIRE MAINTENANT";
+                } else {
+                    // Création de l'utilisateur
+                    const newUserRef = db.ref('users').push();
+                    const newUserId = newUserRef.key;
+                    
+                    newUserRef.set({
+                        userId: newUserId,
+                        name: name,
+                        phone: phone,
+                        password: pin,
+                        referrer: referrerId || "Direct", 
+                        balance: 1000, 
+                        totalEarnings: 0,
+                        totalInvested: 0,
+                        dateJoined: new Date().toLocaleString()
+                    }).then(() => {
+                        alert("Compte créé avec succès !");
+                        window.location.href = "index.html";
+                    }).catch(error => {
+                        alert("Erreur: " + error.message);
+                        btn.disabled = false;
+                        btn.innerText = "S'INSCRIRE MAINTENANT";
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
