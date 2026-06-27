@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Germany Solar | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { background-color: #f8fafd; font-family: 'Helvetica', sans-serif; margin: 0; padding: 0; color: #333; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; width: 90%; max-width: 350px; border-radius: 20px; padding: 20px; position: relative; text-align: center; border: 3px solid #facc15; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; color: #666; cursor: pointer; }
+        .btn-social { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 12px; border-radius: 30px; border: 1.5px solid #ccc; margin-top: 10px; font-weight: bold; font-size: 14px; text-decoration: none; color: #333; }
+        .header-logo { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: white; border-bottom: 2px solid #facc15; }
+        .promo-banner { width: 100%; height: 220px; background-size: cover; background-position: center; position: relative; transition: background-image 1s ease-in-out; }
+        .function-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 20px 10px; text-align: center; }
+        .icon-circle { width: 55px; height: 55px; border-radius: 50%; border: 2px solid #facc15; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto; background: white; cursor: pointer; }
+        .icon-circle i { font-size: 20px; color: #111111; }
+        .icon-fc { font-weight: bold; color: #111111; font-size: 18px; }
+        .function-label { font-size: 12px; color: #444; font-weight: 500; }
+        .assets-box { background: white; margin: 0 15px; padding: 18px; border-radius: 12px; border: 2px solid #facc15; }
+        .asset-row { display: flex; justify-content: space-between; align-items: center; }
+        .asset-label { font-size: 12px; color: #777; margin-bottom: 4px; }
+        .asset-amount { font-size: 20px; font-weight: bold; color: #1a1a1a; }
+        .gain-amount { font-size: 20px; font-weight: bold; color: #111111; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #eee; z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 12px; color: #999; text-decoration: none; }
+        .nav-item.active { color: #111111; font-weight: bold; }
+        .nav-icon-circle { width: 24px; height: 24px; border: 2px solid #999; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; font-size: 12px; }
+        .active .nav-icon-circle { border-color: #111111; background-color: #facc15; }
+    </style>
+</head>
+<body>
+
+    <div id="announcementModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 class="text-2xl font-black italic mb-4 text-[#111111]">GERMANY <span class="text-[#facc15]">SOLAR</span></h2>
+            <div class="w-full h-32 mb-4 rounded-lg overflow-hidden">
+                <img id="modal-img" src="IMG_6482.jpeg" alt="Germany Solar Promo" class="w-full h-full object-cover transition-opacity duration-500">
+            </div>
+            <p class="text-sm font-bold mb-3">🚀 Invitez vos amis et gagnez des commissions facilement !</p>
+            <p class="text-xs text-gray-600 mb-4 leading-relaxed">Chaque fois qu’un ami que vous avez invité effectue son premier achat, vous recevez une commission. Taux : 30 % - 2 % - 1 %</p>
+            <a href="https://t.me/+DoNmk-4JT6BhMDM0" target="_blank" class="btn-social"><i class="fab fa-telegram" style="color:#0088cc"></i> Rejoindre le canal Telegram</a>
+            <a href="https://chat.whatsapp.com/B8sRavVow6k9M6XFV2d2FD?mode=gi_t" target="_blank" class="btn-social"><i class="fab fa-whatsapp" style="color:#25D366"></i> Rejoindre le groupe WhatsApp</a>
+            <button onclick="closeModal()" class="btn-social mt-4 bg-yellow-400 text-black border-none uppercase">OK</button>
+        </div>
+    </div>
+
+    <div class="header-logo">
+        <h1 class="text-xl font-black italic text-[#111111]">GERMANY <span class="text-[#facc15]">SOLAR</span></h1>
+        <div class="flex items-center gap-2">
+            <i class="fas fa-sun text-[#111111] text-lg"></i>
+            <span class="text-xs text-gray-500">Investissez dans l'énergie solaire</span>
+        </div>
+    </div>
+
+    <div class="promo-banner" id="banner"></div>
+
+    <p class="text-center text-xs font-bold text-gray-400 mt-6">- - - Fonctions courantes - - -</p>
+    <div class="function-grid">
+        <a href="deposer.html"><div class="icon-circle"><i class="fas fa-mobile-alt"></i></div><span class="function-label">Déposer</span></a>
+        <a href="retrait.html"><div class="icon-circle"><span class="icon-fc">FC</span></div><span class="function-label">Retirer</span></a>
+        <a href="compte.html"><div class="icon-circle"><i class="fas fa-credit-card"></i></div><span class="function-label">Compte</span></a>
+        <div onclick="showAbout()" class="icon-circle"><i class="far fa-compass"></i></div><span class="function-label">À propos</span>
+    </div>
+
+    <p class="text-center text-xs font-bold text-gray-400 mb-2">- - - Actifs du compte - - -</p>
+    <div class="assets-box shadow-sm">
+        <div class="asset-row">
+            <div>
+                <p class="asset-label">Solde du compte</p>
+                <p id="user-balance" class="asset-amount">0.00 FC</p>
+            </div>
+            <div class="text-right">
+                <p class="asset-label">Gains du jour</p>
+                <p id="daily-gain" class="gain-amount">0.00 FC</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mx-4 mt-6 bg-white p-3 rounded-lg border border-gray-100 flex items-center gap-3 shadow-sm">
+        <div class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-[#111111] font-bold text-xs">FC</div>
+        <marquee class="text-sm text-gray-600">Retrait effectué avec succès par 081***... Félicitations !</marquee>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item active"><div class="nav-icon-circle"><i class="fas fa-redo-alt"></i></div><span>Commencer</span></a>
+        <a href="investir.html" class="nav-item"><div class="nav-icon-circle"><i class="fas fa-tasks"></i></div><span>Investir</span></a>
+        <a href="gains.html" class="nav-item"><div class="nav-icon-circle"><i class="fas fa-chart-line"></i></div><span>Gains</span></a>
+        <a href="agent.html" class="nav-item"><div class="nav-icon-circle"><i class="fas fa-paper-plane"></i></div><span>Agent</span></a>
+        <a href="profil.html" class="nav-item"><div class="nav-icon-circle"><i class="fas fa-ellipsis-h"></i></div><span>Profil</span></a>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://firstsolar-e2ba3-default-rtdb.firebaseio.com/" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const userId = localStorage.getItem('userId');
+
+        function closeModal() { document.getElementById('announcementModal').style.display = 'none'; }
+        function showAbout() { alert("GERMANY SOLAR : Votre partenaire d'investissement numérique en RDC."); }
+
+        // Système d'alternance d'images (IMG_6482.jpeg et IMG_6483.jpeg)
+        const images = ['IMG_6482.jpeg', 'IMG_6483.jpeg'];
+        let currentImgIndex = 0;
+        const banner = document.getElementById('banner');
+        const modalImg = document.getElementById('modal-img');
+
+        function rotateImages() {
+            currentImgIndex = (currentImgIndex + 1) % images.length;
+            if (banner) {
+                banner.style.backgroundImage = `url('${images[currentImgIndex]}')`;
+            }
+            if (modalImg) {
+                modalImg.src = images[currentImgIndex];
+            }
+        }
+        
+        // Configuration initiale et intervalle de changement de l'image toutes les 4 secondes
+        if (banner) banner.style.backgroundImage = `url('${images[0]}')`;
+        setInterval(rotateImages, 4000);
+
+        if (userId) {
+            const userRef = db.ref('users/' + userId);
+            userRef.on('value', async (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    document.getElementById('user-balance').innerText = `${parseFloat(data.balance).toFixed(2)} FC`;
+                    if (data.myProducts) {
+                        let totalDaily = 0;
+                        const now = new Date().getTime();
+                        let updates = {};
+                        let gainAdded = false;
+
+                        Object.keys(data.myProducts).forEach(key => {
+                            const prod = data.myProducts[key];
+                            totalDaily += parseFloat(prod.daily);
+                            const lastCollect = prod.lastCollectTime || new Date(prod.purchaseDate).getTime();
+                            if (now - lastCollect >= 86400000) { 
+                                data.balance += parseFloat(prod.daily);
+                                updates[`myProducts/${key}/lastCollectTime`] = now;
+                                gainAdded = true;
+                            }
+                        });
+                        document.getElementById('daily-gain').innerText = `${totalDaily.toFixed(2)} FC`;
+                        if (gainAdded) {
+                            updates['balance'] = data.balance;
+                            await userRef.update(updates);
+                        }
+                    }
+                }
+            });
+        } else {
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
