@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Germany Solar | Profil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { background-color: #f8fafc; font-family: 'Helvetica', sans-serif; padding-bottom: 90px; margin: 0; }
+        .text-kin { color: #111111; }
+        .bg-kin { background-color: #111111; }
+        .border-kin { border-color: #111111; }
+        .header-profile { background: white; padding: 25px 15px; position: relative; border-bottom: 2px solid #facc15; }
+        .user-info h2 { font-size: 20px; font-weight: 800; color: #1a1a1a; margin: 0; }
+        .user-info p { font-size: 13px; color: #777; margin: 2px 0 10px 0; }
+        .logo-container { position: absolute; right: 15px; top: 25px; width: 70px; height: 70px; border-radius: 50%; background: white; border: 2px solid #facc15; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 6px rgba(0,0,0,0.05); overflow: hidden; }
+        .logo-img { width: 100%; height: 100%; object-fit: cover; }
+        .balance-card { border-radius: 12px; padding: 15px; margin: 15px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .balance-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .balance-value { font-size: 20px; font-weight: 800; margin-top: 8px; }
+        .history-btn { display: flex; align-items: center; gap: 6px; font-size: 11px; opacity: 0.9; text-transform: uppercase; font-weight: bold; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 15px; }
+        .action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 15px; margin-bottom: 25px; }
+        .action-btn { border-radius: 12px; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; font-weight: bold; font-size: 13px; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-decoration: none; }
+        .action-btn i { font-size: 26px; }
+        .mgmt-list { background: white; margin: 15px; border-radius: 16px; padding: 10px 0; border: 1px solid #eee; }
+        .mgmt-item { display: flex; align-items: center; justify-content: space-between; padding: 18px 15px; border-bottom: 1px solid #f9f9f9; text-decoration: none; color: #333; }
+        .mgmt-item:last-child { border-bottom: none; }
+        .mgmt-icon-box { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid #f0f0f0; margin-right: 15px; }
+        .mgmt-icon-box i { font-size: 18px; color: #111111; }
+        .mgmt-text { flex: 1; }
+        .mgmt-title { font-weight: bold; font-size: 15px; color: #222; }
+        .mgmt-desc { font-size: 11px; color: #777; margin-top: 2px; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 2px solid #facc15; z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 12px; color: #999; text-decoration: none; font-weight: bold; }
+        .nav-item.active { color: #111111; }
+        .nav-item i { font-size: 18px; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="header-profile">
+        <div class="user-info">
+            <h2 id="display-phone">Chargement...</h2>
+            <p id="display-id">ID: ...</p>
+            <p class="text-kin font-black uppercase text-xs mt-3 tracking-wider text-[#111111]">GERMANY SOLAR</p>
+            <p class="text-gray-500 text-xs italic">Gestion raisonnable des fonds disponibles</p>
+        </div>
+        <div class="logo-container">
+            <img src="IMG_6484.jpeg" alt="Germany Solar" class="logo-img">
+        </div>
+    </div>
+
+    <div class="balance-card bg-kin">
+        <div>
+            <div class="balance-title"><i class="fas fa-chart-line"></i> Revenus Totaux</div>
+            <p id="total-earnings" class="balance-value">0 FC</p>
+        </div>
+        <a href="historique_revenus.html" class="history-btn"><i class="fas fa-history text-sm"></i> Historique</a>
+    </div>
+
+    <div class="balance-card bg-gray-900">
+        <div>
+            <div class="balance-title"><i class="fas fa-wallet"></i> Solde Disponible</div>
+            <p id="available-balance" class="balance-value">0.00 FC</p>
+        </div>
+        <a href="historique_solde.html" class="history-btn"><i class="fas fa-history text-sm"></i> Historique</a>
+    </div>
+
+    <div class="action-grid">
+        <a href="deposer.html" class="action-btn" style="background: #4a90e2;">
+            <i class="fas fa-mobile-alt"></i> Déposer
+        </a>
+        <a href="retrait.html" class="action-btn" style="background: #111111; border: 1px solid #facc15;">
+            <i class="fas fa-hand-holding-usd text-[#facc15]"></i> Retirer
+        </a>
+        <a href="compte.html" class="action-btn" style="background: #3ac47d;">
+            <i class="fas fa-credit-card"></i> Compte
+        </a>
+    </div>
+
+    <p class="text-center text-gray-500 font-bold text-sm my-5 uppercase tracking-widest">- - - Gestion du compte - - -</p>
+
+    <div class="mgmt-list">
+        <a href="echanger.html" class="mgmt-item">
+            <div class="flex items-center">
+                <div class="mgmt-icon-box"><i class="fas fa-gift"></i></div>
+                <div class="mgmt-text">
+                    <p class="mgmt-title">Échanger</p>
+                    <p class="mgmt-desc">Échanger les récompenses du code de bon rouge</p>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right text-gray-300"></i>
+        </a>
+        
+        <a href="https://chat.whatsapp.com/LWXBDXWCfdd4dwa8vYYcoN" class="mgmt-item" target="_blank">
+            <div class="flex items-center">
+                <div class="mgmt-icon-box"><i class="fas fa-headphones-alt"></i></div>
+                <div class="mgmt-text">
+                    <p class="mgmt-title">Service client</p>
+                    <p class="mgmt-desc">Heures en ligne : 9h00-21h00</p>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right text-gray-300"></i>
+        </a>
+
+        <a href="mot_de_passe.html" class="mgmt-item">
+            <div class="flex items-center">
+                <div class="mgmt-icon-box"><i class="fas fa-lock"></i></div>
+                <div class="mgmt-text">
+                    <p class="mgmt-title">Mot de passe</p>
+                    <p class="mgmt-desc">Modifier le mot de passe de connexion au compte</p>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right text-gray-300"></i>
+        </a>
+        
+        <div onclick="logout()" class="mgmt-item cursor-pointer">
+            <div class="flex items-center">
+                <div class="mgmt-icon-box"><i class="fas fa-sign-out-alt"></i></div>
+                <div class="mgmt-text">
+                    <p class="mgmt-title">Déconnexion</p>
+                    <p class="mgmt-desc">Quitter la session en toute sécurité</p>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right text-gray-300"></i>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-sync-alt"></i><span>Commencer</span></a>
+        <a href="investir.html" class="nav-item"><i class="fas fa-list-alt"></i><span>Investir</span></a>
+        <a href="gains.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>Gains</span></a>
+        <a href="agent.html" class="nav-item"><i class="fas fa-paper-plane"></i><span>Agent</span></a>
+        <a href="profil.html" class="nav-item active"><i class="fas fa-user-circle"></i><span>Profil</span></a>
+    </div>
+
+    <script>
+        // CONFIGURATION FIREBASE
+        const firebaseConfig = { databaseURL: "https://firstsolar-e2ba3-default-rtdb.firebaseio.com/" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const userId = localStorage.getItem('userId');
+
+        if (userId) {
+            const userRef = db.ref('users/' + userId);
+            
+            // Mise à jour en temps réel des données utilisateur
+            userRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    document.getElementById('display-phone').innerText = "Utilisateur +243 " + (data.phone || "");
+                    document.getElementById('display-id').innerText = "ID: " + userId.substring(0, 8).toUpperCase();
+                    document.getElementById('available-balance').innerText = parseFloat(data.balance || 0).toFixed(2) + " FC";
+                    
+                    // Calcul des revenus totaux basés sur la devise d'origine (FC)
+                    if(data.myProducts) {
+                        document.getElementById('total-earnings').innerText = parseFloat(data.balance || 0).toFixed(0) + " FC";
+                    }
+                }
+            });
+        } else {
+            window.location.href = "index.html"; // Redirection si non connecté
+        }
+
+        function logout() {
+            if(confirm("Voulez-vous vous déconnecter ?")) {
+                localStorage.clear();
+                window.location.href = "index.html";
+            }
+        }
+    </script>
+</body>
+</html>
