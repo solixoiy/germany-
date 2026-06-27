@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Germany Solar | Investir</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { background-color: #f0f3f7; font-family: 'Arial', sans-serif; padding-bottom: 100px; margin: 0; }
+        .header-dark { background: #111111; color: white; padding: 25px 15px; border-bottom: 4px solid #facc15; }
+        .promo-box { background: white; border-radius: 30px; padding: 12px 20px; margin: -20px 15px 10px 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: relative; z-index: 10; border: 1.5px solid #facc15; }
+        .vip-card { background: white; border-radius: 20px; margin: 15px; padding: 15px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 2px solid #facc15; }
+        .product-img { width: 100%; height: 180px; object-fit: cover; border-radius: 15px; margin: 12px 0; background: #eee; }
+        .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; border-top: 1px solid #f5f5f5; padding-top: 10px; }
+        .label-gray { font-size: 10px; color: #777; text-transform: uppercase; font-weight: bold; }
+        .val-bold { font-size: 15px; font-weight: bold; color: #333; }
+        .buy-btn { background: #facc15; color: #111111; border-radius: 30px; padding: 12px; width: 100%; font-weight: 900; margin-top: 15px; border: none; transition: 0.3s; text-transform: uppercase; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .buy-btn:active { transform: scale(0.95); }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 2px solid #facc15; z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #999; text-decoration: none; font-weight: bold; }
+        .nav-item.active { color: #111111; }
+    </style>
+</head>
+<body>
+
+    <div class="header-dark text-center">
+        <h1 class="text-2xl font-black italic tracking-wider">GERMANY SOLAR</h1>
+    </div>
+
+    <div class="promo-box">
+        <i class="fas fa-bullhorn text-[#111111]"></i>
+        <marquee class="text-xs font-bold text-gray-700">Commissions : Lvl 1: 30% | Lvl 2: 2% | Lvl 3: 1%</marquee>
+    </div>
+
+    <p class="text-center text-gray-400 font-bold text-xs my-6 uppercase tracking-widest">- - - Projets d'investissement - - -</p>
+
+    <div id="vip-list"></div>
+
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-sync-alt"></i><span>Commencer</span></a>
+        <a href="investir.html" class="nav-item active"><i class="fas fa-list-alt"></i><span>Investir</span></a>
+        <a href="gains.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>Gains</span></a>
+        <a href="agent.html" class="nav-item"><i class="fas fa-paper-plane"></i><span>Agent</span></a>
+        <a href="profil.html" class="nav-item"><i class="fas fa-user-circle"></i><span>Profil</span></a>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://firstsolar-e2ba3-default-rtdb.firebaseio.com/" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const userId = localStorage.getItem('userId');
+
+        // Prix inchangés, revenus calculés à 11% du prix, durée fixée à 21 jours, et nouvelles images intégrées
+        const vips = [
+            { id: 1, name: "VIP 1", price: 10000, daily: 1100, duration: 21, img: "IMG_6484.jpeg" },
+            { id: 2, name: "VIP 2", price: 35000, daily: 3850, duration: 21, img: "IMG_6485.jpeg" },
+            { id: 3, name: "VIP 3", price: 90000, daily: 9900, duration: 21, img: "IMG_6486.jpeg" },
+            { id: 4, name: "VIP 4", price: 280000, daily: 30800, duration: 21, img: "IMG_6487.jpeg" },
+            { id: 5, name: "VIP 5", price: 850000, daily: 93500, duration: 21, img: "IMG_6488.jpeg" },
+            { id: 6, name: "VIP 6", price: 2500000, daily: 275000, duration: 21, img: "IMG_6489.jpeg" },
+            { id: 7, name: "VIP 7", price: 4000000, daily: 440000, duration: 21, img: "IMG_6491.jpeg" }
+        ];
+
+        function displayProducts() {
+            const container = document.getElementById('vip-list');
+            let html = '';
+            vips.forEach(p => {
+                html += `
+                <div class="vip-card">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-black text-[#111111]">${p.name}</h2>
+                        <span style="color:#ffa940; font-size:10px; font-weight:bold; background:#fff2e8; padding:3px 8px; border-radius:10px;">100% SÉCURISÉ</span>
+                    </div>
+                    <img src="${p.img}" class="product-img" alt="${p.name}">
+                    <div class="price-grid">
+                        <div><p class="val-bold text-[#111111]">${p.price} FC</p><p class="label-gray">Prix</p></div>
+                        <div><p class="val-bold text-blue-700">${p.daily} FC</p><p class="label-gray">Par jour</p></div>
+                        <div><p class="val-bold text-blue-700">${p.duration} Jrs</p><p class="label-gray">Cycle</p></div>
+                        <div><p class="val-bold text-blue-700">${(p.daily * p.duration).toLocaleString()} FC</p><p class="label-gray">Total</p></div>
+                    </div>
+                    <button onclick="handlePurchase(${p.id})" class="buy-btn" id="btn-${p.id}">Acheter</button>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        window.handlePurchase = async (id) => {
+            if (!userId) {
+                alert("Veuillez vous connecter.");
+                window.location.href = "index.html";
+                return;
+            }
+
+            const vip = vips.find(v => v.id === id);
+            const btn = document.getElementById(`btn-${id}`);
+            btn.disabled = true;
+            btn.innerText = "TRAITEMENT...";
+
+            try {
+                const userRef = db.ref('users/' + userId);
+                const snapshot = await userRef.once('value');
+                const userData = snapshot.val();
+                const currentBalance = userData.balance || 0;
+
+                if (currentBalance >= vip.price) {
+                    await userRef.update({
+                        balance: currentBalance - vip.price,
+                        canWithdraw: true 
+                    });
+
+                    await db.ref('users/' + userId + '/myProducts').push({
+                        name: vip.name,
+                        daily: vip.daily,
+                        image: vip.img,
+                        purchaseDate: new Date().toISOString(),
+                        lastCollectTime: new Date().getTime()
+                    });
+
+                    alert("Achat réussi ! Votre retrait est désormais débloqué.");
+                    window.location.href = "gains.html";
+                } else {
+                    alert("Solde insuffisant pour acheter ce pack.");
+                    btn.disabled = false;
+                    btn.innerText = "Acheter";
+                }
+            } catch (error) {
+                alert("Erreur réseau. Réessayez.");
+                btn.disabled = false;
+                btn.innerText = "Acheter";
+            }
+        };
+
+        displayProducts();
+    </script>
+</body>
+</html>
