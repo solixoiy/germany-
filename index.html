@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Germany Solar | Connexion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght=700&family=Roboto:wght=400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            background-color: #111111; /* Fond Noir */
+            color: white;
+        }
+
+        .logo-wrapper { text-align: center; margin-bottom: 30px; }
+        .logo-container {
+            display: inline-block;
+            background: #facc15; /* Fond Jaune */
+            padding: 10px 20px;
+            border: 3px solid white;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .v-top {
+            background: #facc15;
+            border: 3px solid white;
+            border-bottom: none;
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            top: -38px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #111111; /* Texte Noir */
+            font-family: 'Oswald', sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 5px 5px 0 0;
+        }
+        .main-text {
+            color: #111111; /* Texte Noir */
+            font-family: 'Oswald', sans-serif;
+            font-size: 24px;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+        }
+        .slogan {
+            color: #facc15; /* Slogan Jaune */
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-top: 8px;
+            letter-spacing: 1.5px;
+        }
+
+        .input-group {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            border: 2px solid #facc15; /* Contour Jaune */
+        }
+        .input-group input {
+            background: transparent;
+            border: none;
+            width: 100%;
+            color: #333;
+            outline: none;
+            font-size: 16px;
+        }
+        .input-group span {
+            color: #111111; /* Code pays en Noir */
+            font-weight: bold;
+            margin-right: 10px;
+            border-right: 1px solid #ccc;
+            padding-right: 10px;
+        }
+
+        .btn-login {
+            background-color: #facc15; /* Bouton Jaune */
+            color: #111111; /* Texte Noir */
+            width: 100%;
+            padding: 15px;
+            border-radius: 50px;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: 0.3s;
+        }
+        .btn-login:active { transform: scale(0.98); }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-6">
+
+    <div class="w-full max-w-sm">
+        <div class="logo-wrapper">
+            <div class="logo-container">
+                <div class="v-top">G</div>
+                <div class="main-text">
+                    GERMANY SOLAR <i class="fa-solid fa-sun text-xl text-[#111111]"></i>
+                </div>
+            </div>
+            <div class="slogan">Investissez dans l'énergie solaire</div>
+        </div>
+
+        <p class="text-center mb-8 font-bold text-lg uppercase tracking-widest text-[#facc15]">Connexion</p>
+
+        <form id="loginForm">
+            <div class="input-group">
+                <span>+243</span>
+                <input type="tel" id="phone" placeholder="Téléphone" required>
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Mot de passe (6 chiffres)" inputmode="numeric" maxlength="6" required>
+            </div>
+
+            <button type="submit" id="loginBtn" class="btn-login">SE CONNECTER</button>
+        </form>
+
+        <div class="mt-8 text-center">
+            <p class="text-sm text-white">Pas encore de compte ? <br>
+                <a href="register.html" class="font-bold text-[#facc15] underline">Créez-en un ici</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION DE TA BASE DE DONNÉES (Inchangée)
+        const firebaseConfig = {
+            databaseURL: "https://firstsolar-e2ba3-default-rtdb.firebaseio.com/"
+        };
+        
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
+
+            btn.disabled = true;
+            btn.innerText = "CONNEXION...";
+
+            // Recherche dans le dossier 'users'
+            db.ref('users').orderByChild('phone').equalTo(phone).once('value', snapshot => {
+                if (snapshot.exists()) {
+                    let userFound = false;
+                    let userId = "";
+
+                    snapshot.forEach(childSnapshot => {
+                        const userData = childSnapshot.val();
+                        if (userData.password === password) {
+                            userFound = true;
+                            userId = childSnapshot.key;
+                        }
+                    });
+
+                    if (userFound) {
+                        // Sauvegarde des infos pour les autres pages
+                        localStorage.setItem('userId', userId);
+                        localStorage.setItem('userPhone', phone);
+                        
+                        // Redirection vers le Dashboard
+                        window.location.href = "dashboard.html";
+                    } else {
+                        alert("Mot de passe incorrect.");
+                        btn.disabled = false;
+                        btn.innerText = "SE CONNECTER";
+                    }
+                } else {
+                    alert("Ce numéro n'est pas enregistré.");
+                    btn.disabled = false;
+                    btn.innerText = "SE CONNECTER";
+                }
+            }).catch(error => {
+                alert("Erreur de connexion : " + error.message);
+                btn.disabled = false;
+                btn.innerText = "SE CONNECTER";
+            });
+        });
+    </script>
+</body>
+</html>
