@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Germany Solar | Historique complet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { background-color: #f8fafc; font-family: 'Helvetica', sans-serif; margin: 0; padding: 0; }
+        .header-nav { display: flex; align-items: center; justify-content: center; padding: 15px; background: white; position: relative; border-bottom: 2px solid #facc15; }
+        .back-btn { position: absolute; left: 15px; font-size: 20px; color: #333; text-decoration: none; }
+        .header-title { font-weight: 900; font-size: 18px; color: #111111; text-transform: uppercase; italic: true; }
+        .tabs-container { background: white; margin: 20px 15px; border-radius: 30px; display: flex; padding: 4px; border: 1px solid #ddd; }
+        .tab-item { flex: 1; text-align: center; padding: 10px 0; font-weight: bold; font-size: 14px; color: #333; cursor: pointer; border-radius: 25px; transition: 0.3s; }
+        .tab-item.active { background-color: #111111; color: #facc15; box-shadow: 0 2px 6px rgba(17,17,17,0.3); }
+        .history-card { background: white; margin: 10px 15px; border-radius: 12px; padding: 15px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .history-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .history-label { font-size: 14px; font-weight: bold; color: #333; }
+        .history-value { font-size: 15px; font-weight: 800; color: #1a1a1a; }
+        .divider { border-top: 1px dashed #ccc; margin: 10px 0; }
+        .time-label { font-size: 12px; color: #555; }
+        .time-value { font-size: 12px; color: #333; font-weight: 500; }
+        .status-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; font-weight: bold; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-success { background: #d4edda; color: #155724; }
+        .status-failed { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+
+    <div class="header-nav">
+        <a href="profil.html" class="back-btn"><i class="fas fa-chevron-left text-gray-600"></i></a>
+        <h1 class="header-title">GERMANY HISTORIQUE</h1>
+    </div>
+
+    <div class="tabs-container">
+        <div class="tab-item active" onclick="loadHistory('Solde')">Solde</div>
+        <div class="tab-item" onclick="loadHistory('Dépôt')">Dépôt</div>
+        <div class="tab-item" onclick="loadHistory('Retrait')">Retrait</div>
+    </div>
+
+    <div id="history-content">
+        <p class="text-center text-gray-400 mt-10">Chargement de l'historique...</p>
+    </div>
+
+    <script>
+        // CONFIGURATION FIREBASE
+        const firebaseConfig = { databaseURL: "https://firstsolar-e2ba3-default-rtdb.firebaseio.com/" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const userId = localStorage.getItem('userId');
+
+        function formatDate(dateString) {
+            if(!dateString) return "Date inconnue";
+            const date = new Date(dateString);
+            return date.toLocaleString('fr-FR');
+        }
+
+        async function loadHistory(filter) {
+            // Gestion visuelle des onglets
+            const tabs = document.querySelectorAll('.tab-item');
+            tabs.forEach(t => {
+                t.classList.remove('active');
+                if(t.innerText === filter) t.classList.add('active');
+            });
+
+            const content = document.getElementById('history-content');
+            content.innerHTML = '<p class="text-center text-gray-400 mt-10">Chargement...</p>';
+
+            if (!userId) return;
+
+            let html = '';
+            
+            try {
+                if (filter === "Solde") {
+                    const snap = await db.ref('users/' + userId).once('value');
+                    const userData = snapshot = snap.val();
+                    
+                    html += `
+                        <div class="history-card">
+                            <div class="history-row">
+                                <span class="history-label">Bonus d'inscription</span>
+                                <span class="history-value text-green-600">+1 000.00 FC</span>
+                            </div>
+                            <div class="divider"></div>
+                            <div class="history-row">
+                                <span class="time-label">Statut :</span>
+                                <span class="status-badge status-success">Complété</span>
+                            </div>
+                        </div>`;
+                } 
+                
+                else if (filter === "Retrait") {
+                    const snap = await db.ref('admin/withdrawals').orderByChild('userId').equalTo(userId).once('value');
+                    if (snap.exists()) {
+                        snap.forEach(child => {
+                            const data = child.val();
+                            html += `
+                            <div class="history-card">
+                                <div class="history-row">
+                                    <span class="history-label">Demande de Retrait</span>
+                                    <span class="history-value text-red-600">-${parseFloat(data.amount || 0).toLocaleString('fr-FR', {minimumFractionDigits: 2})} FC</span>
+                                </div>
+                                <div class="divider"></div>
+                                <div class="history-row">
+                                    <span class="time-label">${formatDate(data.date)}</span>
+                                    <span class="status-badge ${data.status === 'En attente' ? 'status-pending' : 'status-success'}">${data.status}</span>
+                                </div>
+                            </div>`;
+                        });
+                    }
+                }
+
+                else if (filter === "Dépôt") {
+                    const snap = await db.ref('admin/recharges').orderByChild('userId').equalTo(userId).once('value');
+                    if (snap.exists()) {
+                        snap.forEach(child => {
+                            const data = child.val();
+                            html += `
+                            <div class="history-card">
+                                <div class="history-row">
+                                    <span class="history-label">Recharge de compte</span>
+                                    <span class="history-value text-blue-600">+${parseFloat(data.amount || 0).toLocaleString('fr-FR', {minimumFractionDigits: 2})} FC</span>
+                                </div>
+                                <div class="divider"></div>
+                                <div class="history-row">
+                                    <span class="time-label">${formatDate(data.date)}</span>
+                                    <span class="status-badge ${data.status === 'En attente' ? 'status-pending' : 'status-success'}">${data.status}</span>
+                                </div>
+                            </div>`;
+                        });
+                    }
+                }
+
+                content.innerHTML = html || '<p class="text-center text-gray-400 mt-10">Aucun historique trouvé.</p>';
+
+            } catch (error) {
+                content.innerHTML = '<p class="text-center text-red-400 mt-10">Erreur de chargement.</p>';
+            }
+        }
+
+        window.onload = () => loadHistory('Solde');
+    </script>
+</body>
+</html>
