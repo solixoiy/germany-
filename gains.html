@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Germany Solar | Gains</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { background-color: #f0f3f7; font-family: sans-serif; padding-bottom: 100px; margin: 0; }
+        .header-section { background: #111111; color: white; padding: 25px 15px; position: relative; border-bottom: 3px solid #facc15; }
+        .progress-container { width: 100%; background: #222222; height: 12px; border-radius: 6px; margin-top: 12px; display: flex; overflow: hidden; border: 1px solid rgba(250, 204, 21, 0.4); }
+        .progress-segment { flex: 1; border-right: 1px solid #111111; background: linear-gradient(to bottom, #facc15, #eab308); }
+        .stats-box { background: white; margin: 15px; border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 2px solid #facc15; }
+        .stats-label { font-size: 11px; color: #666; font-weight: bold; uppercase; }
+        .stats-value { font-size: 18px; font-weight: 900; color: #333; }
+        .stats-value.red { color: #111111; }
+        .tab-container { display: flex; margin: 0 15px; gap: 10px; }
+        .tab { flex: 1; padding: 12px; text-align: center; border-radius: 25px; font-weight: bold; border: 1px solid #ddd; background: white; color: #666; }
+        .tab.active { background: #111111; color: white; border-color: #111111; box-shadow: 0 2px 5px rgba(17,17,17,0.2); }
+        .investment-card { background: white; margin: 15px; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .product-header { padding: 12px 15px; font-weight: 900; color: #111111; display: flex; justify-content: space-between; border-bottom: 2px solid #facc15; background: #fffbeb; }
+        .prod-img { width: 100%; height: 160px; object-fit: cover; background: #f9f9f9; }
+        .prod-info { padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .collect-btn { background: #facc15; color: #111111; width: calc(100% - 30px); margin: 0 15px 15px 15px; padding: 12px; border-radius: 30px; font-weight: 900; border: none; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s; }
+        .collect-btn:disabled { background: #ccc !important; color: #666 !important; cursor: not-allowed; box-shadow: none; }
+        #empty-state { text-align: center; padding: 50px 20px; color: #999; font-weight: bold; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 2px solid #facc15; z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #999; text-decoration: none; font-weight: bold; }
+        .nav-item.active { color: #111111; font-weight: 900; }
+    </style>
+</head>
+<body>
+
+    <div class="header-section">
+        <h1 class="text-2xl font-black italic tracking-wide">GERMANY GAINS</h1>
+        <div class="progress-container">
+            <div class="progress-segment"></div><div class="progress-segment"></div><div class="progress-segment"></div><div class="progress-segment"></div><div class="progress-segment"></div>
+        </div>
+    </div>
+
+    <p class="text-center text-gray-500 text-xs my-4 font-black uppercase tracking-wider">- - - Mes produits de gains - - -</p>
+
+    <div class="stats-box">
+        <div>
+            <p class="stats-label uppercase">Appareils actifs :</p>
+            <p id="count-val" class="stats-value">0</p>
+        </div>
+        <div class="text-right">
+            <p class="stats-label uppercase">Solde actuel :</p>
+            <p id="total-val" class="stats-value red">0.00 FC</p>
+        </div>
+    </div>
+
+    <div class="tab-container">
+        <div class="tab active">En cours</div>
+        <div class="tab">Terminé</div>
+    </div>
+
+    <div id="investments-container">
+        <div id="empty-state">
+            <p>Chargement de vos investissements...</p>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-sync-alt mb-1"></i><span>Commencer</span></a>
+        <a href="investir.html" class="nav-item"><i class="fas fa-list-alt mb-1"></i><span>Investir</span></a>
+        <a href="gains.html" class="nav-item active"><i class="fas fa-chart-bar mb-1"></i><span>Gains</span></a>
+        <a href="agent.html" class="nav-item"><i class="fas fa-paper-plane mb-1"></i><span>Agent</span></a>
+        <a href="profil.html" class="nav-item"><i class="fas fa-user-circle mb-1"></i><span>Profil</span></a>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://firstsolar-e2ba3-default-rtdb.firebaseio.com/" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const userId = localStorage.getItem('userId');
+
+        function startTimer(endTime, elementId, btnId) {
+            const timerFunc = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = endTime - now;
+                const btn = document.getElementById(btnId);
+
+                if (distance < 0) {
+                    clearInterval(timerFunc);
+                    document.getElementById(elementId).innerText = "Prêt à collecter !";
+                    document.getElementById(elementId).classList.replace('text-blue-600', 'text-green-600');
+                    if(btn) {
+                        btn.disabled = false;
+                        btn.style.background = "#111111";
+                        btn.style.color = "white";
+                    }
+                } else {
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                    document.getElementById(elementId).innerText = `${hours}h ${minutes}m ${seconds}s`;
+                    if(btn) btn.disabled = true;
+                }
+            }, 1000);
+        }
+
+        async function collectProfit(prodKey, amount) {
+            const userRef = db.ref('users/' + userId);
+            const snap = await userRef.once('value');
+            const data = snap.val();
+            const now = new Date().getTime();
+
+            await userRef.update({
+                balance: parseFloat(data.balance || 0) + parseFloat(amount)
+            });
+
+            await db.ref('users/' + userId + '/myProducts/' + prodKey).update({
+                lastCollectTime: now
+            });
+
+            alert("Profit collecté avec succès !");
+            location.reload();
+        }
+
+        if (userId) {
+            const userRef = db.ref('users/' + userId);
+            userRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                const container = document.getElementById('investments-container');
+                
+                if (data && data.myProducts) {
+                    const products = data.myProducts;
+                    const keys = Object.keys(products);
+                    document.getElementById('count-val').innerText = keys.length;
+                    document.getElementById('total-val').innerText = parseFloat(data.balance || 0).toFixed(2) + " FC";
+
+                    let html = '';
+                    keys.forEach(key => {
+                        const p = products[key];
+                        const lastTime = p.lastCollectTime || new Date(p.purchaseDate).getTime();
+                        const nextCollect = lastTime + 86400000; 
+
+                        html += `
+                        <div class="investment-card">
+                            <div class="product-header">
+                                <span class="uppercase tracking-wide">${p.name}</span>
+                                <span class="text-green-500 font-black"><i class="fas fa-circle-notch fa-spin text-xs mr-1"></i> Actif</span>
+                            </div>
+                            <img src="${p.image}" class="prod-img">
+                            <div class="prod-info">
+                                <div><p class="stats-label">Revenu quotidien</p><p class="font-bold text-sm text-gray-800">${p.daily} FC</p></div>
+                                <div><p class="stats-label">Prochaine collecte</p><p id="timer-${key}" class="font-bold text-sm text-blue-600">--:--:--</p></div>
+                            </div>
+                            <button id="btn-${key}" onclick="collectProfit('${key}', ${p.daily})" class="collect-btn" disabled>Collecter les profits</button>
+                        </div>`;
+                        
+                        setTimeout(() => startTimer(nextCollect, `timer-${key}`, `btn-${key}`), 100);
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `<div id="empty-state"><p>Aucun investissement trouvé.</p></div>`;
+                }
+            });
+        } else {
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
