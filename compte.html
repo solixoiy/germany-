@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Germany Solar | Liaison Compte</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { background-color: #f8f9fa; font-family: sans-serif; }
+        .text-kin { color: #111111; }
+        .bg-kin { background-color: #111111; }
+        .header-bar { display: flex; align-items: center; p: 15px; background: white; border-bottom: 2px solid #facc15; }
+        .input-group { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 15px; margin-bottom: 15px; display: flex; align-items: center; transition: 0.2s; }
+        .input-group:focus-within { border-color: #111111; box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.3); }
+        .input-group input, .input-group select { border: none; outline: none; width: 100%; font-size: 14px; margin-left: 10px; background: transparent; font-weight: bold; color: #333; }
+        .input-group i { color: #cbd5e1; width: 20px; text-align: center; }
+        .btn-lier { background-color: #111111; color: #facc15; width: 100%; padding: 15px; border-radius: 30px; font-weight: 900; margin-top: 20px; cursor: pointer; transition: 0.3s; text-transform: uppercase; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: none; letter-spacing: 0.5px; }
+        .btn-lier:disabled { background-color: #ccc; color: #666; cursor: not-allowed; box-shadow: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header-bar p-4">
+        <a href="profil.html"><i class="fas fa-chevron-left text-gray-600 text-lg"></i></a>
+        <h1 class="flex-1 text-center font-black text-[#111111] uppercase text-sm tracking-wide">Configuration Germany Solar</h1>
+    </div>
+
+    <div class="p-6">
+        <div class="flex items-start gap-2 mb-1">
+            <span class="text-2xl text-amber-500 font-black">+</span>
+            <h2 class="text-xl font-black text-gray-800 uppercase tracking-tight">Portefeuille de réception</h2>
+        </div>
+        <p class="text-gray-500 text-xs mb-6 font-bold uppercase tracking-wider">Associez vos coordonnées Mobile Money pour vos retraits (FC)</p>
+
+        <label class="text-xs font-bold text-gray-600 mb-2 block uppercase tracking-wide">Nom du titulaire du compte</label>
+        <div class="input-group">
+            <i class="far fa-user text-gray-400"></i>
+            <input type="text" id="holder-name" placeholder="Nom complet (tel que enregistré chez l'opérateur)">
+        </div>
+
+        <label class="text-xs font-bold text-gray-600 mb-2 block uppercase tracking-wide">Numéro de téléphone de réception</label>
+        <div class="input-group">
+            <i class="far fa-credit-card text-gray-400"></i>
+            <input type="tel" id="account-number" placeholder="Ex: 0812345678">
+        </div>
+
+        <label class="text-xs font-bold text-gray-600 mb-2 block uppercase tracking-wide">Réseau Mobile Money</label>
+        <div class="input-group">
+            <i class="fas fa-university text-gray-400"></i>
+            <select id="bank-name">
+                <option value="" disabled selected>Choisir un opérateur...</option>
+                <option value="Orange Money">Orange Money</option>
+                <option value="Airtel Money">Airtel Money</option>
+                <option value="M-Pesa">M-Pesa</option>
+            </select>
+            <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+        </div>
+
+        <p class="text-[11px] text-gray-500 mt-4 leading-relaxed font-medium">
+            <i class="fas fa-exclamation-triangle text-amber-500 mr-1"></i> Veuillez double-vérifier vos informations. Vos futurs fonds retirés depuis la plateforme seront acheminés exclusivement et automatiquement vers ces coordonnées.
+        </p>
+
+        <button id="btn-submit" onclick="saveAccount()" class="btn-lier">Lier mon compte</button>
+    </div>
+
+    <script>
+        // CONFIGURATION FIREBASE
+        const firebaseConfig = { databaseURL: "https://firstsolar-e2ba3-default-rtdb.firebaseio.com/" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        
+        const userId = localStorage.getItem('userId');
+
+        async function saveAccount() {
+            const name = document.getElementById('holder-name').value;
+            const number = document.getElementById('account-number').value;
+            const bank = document.getElementById('bank-name').value;
+            const btn = document.getElementById('btn-submit');
+
+            if(!userId) {
+                alert("Erreur d'authentification. Veuillez vous reconnecter.");
+                window.location.href = "index.html";
+                return;
+            }
+
+            if(!name || !number || !bank) {
+                alert("Veuillez renseigner l'ensemble des champs requis.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Synchronisation...";
+
+            const bankInfo = {
+                titulaire: name,
+                numero: number,
+                banque: bank,
+                dateLiaison: new Date().toISOString()
+            };
+
+            try {
+                await db.ref('users/' + userId + '/bankInfo').set(bankInfo);
+                localStorage.setItem('userBankInfo', JSON.stringify(bankInfo));
+                
+                alert("Votre méthode de paiement a été enregistrée avec succès.");
+                window.location.href = "retrait.html"; 
+            } catch (error) {
+                alert("Erreur de liaison avec le serveur distant.");
+                btn.disabled = false;
+                btn.innerText = "Lier mon compte";
+            }
+        }
+
+        // Pré-remplissage dynamique des données si configuration existante
+        window.onload = function() {
+            if(userId) {
+                db.ref('users/' + userId + '/bankInfo').once('value').then((snapshot) => {
+                    const data = snapshot.val();
+                    if(data) {
+                        document.getElementById('holder-name').value = data.titulaire;
+                        document.getElementById('account-number').value = data.numero;
+                        document.getElementById('bank-name').value = data.banque;
+                        
+                        const btn = document.getElementById('btn-submit');
+                        btn.innerText = "Mettre à jour le portefeuille";
+                        btn.style.backgroundColor = "#111111";
+                        btn.style.color = "#facc15";
+                        btn.style.border = "1px solid #facc15";
+                    }
+                });
+            }
+        };
+    </script>
+</body>
+</html>
