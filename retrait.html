@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Germany Solar | Retrait</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { background-color: #f0f3f7; font-family: sans-serif; padding-bottom: 20px; }
+        .text-kin { color: #111111; }
+        .bg-kin { background-color: #111111; }
+        .header-bar { background: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #facc15; }
+        .balance-box { background: #111111; color: white; margin: 15px; padding: 20px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #facc15; }
+        .card-white { background: white; margin: 15px; padding: 20px; border-radius: 15px; }
+        .input-field { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-top: 5px; font-size: 15px; outline: none; }
+        .input-field:focus { border-color: #facc15; box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.2); }
+        .btn-confirm { background: #111111; color: #facc15; width: 90%; margin: 20px auto; display: block; padding: 15px; border-radius: 30px; font-weight: 900; text-align: center; border: none; cursor: pointer; transition: 0.3s; text-transform: uppercase; box-shadow: 0 4px 10px rgba(0,0,0,0.1); letter-spacing: 0.5px; }
+        .btn-confirm:disabled { background: #ccc; color: #666; }
+        .info-item { display: flex; align-items: center; gap: 10px; font-size: 11px; color: #666; margin-bottom: 8px; font-weight: bold; }
+        .info-num { background: #111111; color: #facc15; width: 18px; height: 18px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; font-weight: 900; }
+        .border-dashed-custom { border: 2px dashed #facc15; }
+    </style>
+</head>
+<body>
+
+    <div class="header-bar">
+        <a href="profil.html"><i class="fas fa-chevron-left text-gray-600"></i></a>
+        <span class="font-black text-[#111111] uppercase tracking-wide text-sm">Retrait Germany Solar</span>
+        <a href="historique_retrait.html" class="text-gray-500 text-sm font-bold">Historique</a>
+    </div>
+
+    <div class="balance-box">
+        <div>
+            <p class="text-xs opacity-90 font-bold uppercase tracking-wider">Solde retirable :</p>
+            <p id="display-balance" class="text-xl font-black">0.00 FC</p>
+        </div>
+        <i class="fas fa-wallet text-3xl opacity-80 text-[#facc15]"></i>
+    </div>
+
+    <div class="px-4 mt-4">
+        <p class="text-xs font-bold text-gray-600 uppercase tracking-wide">Montant du retrait</p>
+        <div class="relative mt-1">
+            <span class="absolute left-3 top-3 text-gray-800 font-bold">FC</span>
+            <input type="number" id="withdraw-amount" class="input-field pl-10" placeholder="Minimum : 5000 FC">
+        </div>
+    </div>
+
+    <div class="card-white shadow-sm border border-gray-100">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-xs font-bold text-gray-700">Compte de réception lié</span>
+            <a href="compte.html" class="text-gray-900 text-xs font-black bg-amber-100 px-3 py-1 rounded-full uppercase border border-amber-300">Modifier</a>
+        </div>
+        <div id="bank-display" class="bg-gray-50 p-3 rounded-lg mb-4 text-sm text-gray-500 border-dashed-custom text-center font-bold">
+            Aucun portefeuille ou compte lié.
+        </div>
+
+        <p class="text-xs font-bold text-gray-700 mb-1">Mot de passe de sécurité</p>
+        <div class="relative">
+            <input type="password" id="login-pass" class="input-field bg-gray-50 border-none" placeholder="Saisir votre mot de passe">
+        </div>
+    </div>
+
+    <button id="confirm-btn" onclick="processWithdrawal()" class="btn-confirm">Confirmer le retrait</button>
+
+    <div class="px-6 py-4 bg-white m-4 rounded-xl border border-gray-200">
+        <div class="info-item"><span class="info-num">1</span><p>Heures de traitement opérationnelles : 10h00 - 17h00.</p></div>
+        <div class="info-item"><span class="info-num">2</span><p>Montant minimum autorisé par retrait : 5 000 FC.</p></div>
+        <div class="info-item"><span class="info-num">3</span><p>Frais d'infrastructure réseau : 15 % par transaction.</p></div>
+        <div class="info-item"><span class="info-num">4</span><p>Fréquence autorisée : Limité à 1 retrait toutes les 24 heures.</p></div>
+        <div class="info-item"><span class="info-num">5</span><p>Règle d'activation : Réservé aux comptes détenant au moins 1 plan actif.</p></div>
+    </div>
+
+    <script>
+        // CONFIGURATION FIREBASE
+        const firebaseConfig = { databaseURL: "https://firstsolar-e2ba3-default-rtdb.firebaseio.com/" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const userId = localStorage.getItem('userId');
+
+        // Charger les données en temps réel
+        if (userId) {
+            db.ref('users/' + userId).on('value', (snapshot) => {
+                const userData = snapshot.val();
+                if (userData) {
+                    document.getElementById('display-balance').innerText = parseFloat(userData.balance || 0).toLocaleString('fr-FR', {minimumFractionDigits: 2}) + " FC";
+                    
+                    const displayArea = document.getElementById('bank-display');
+                    if(userData.bankInfo) {
+                        displayArea.innerHTML = `
+                            <div class="flex flex-col items-start text-left">
+                                <span class="text-gray-900 font-black text-base uppercase tracking-wide"><i class="fas fa-university text-amber-500 mr-2"></i>${userData.bankInfo.banque}</span>
+                                <span class="text-gray-800 font-black mt-1 text-lg">${userData.bankInfo.numero}</span>
+                                <span class="text-[11px] uppercase text-gray-400 mt-1 font-bold">Titulaire : ${userData.bankInfo.titulaire}</span>
+                            </div>`;
+                        displayArea.classList.add('border-solid', 'bg-white');
+                        displayArea.classList.remove('text-center');
+                    }
+                }
+            });
+        }
+
+        async function processWithdrawal() {
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            const pass = document.getElementById('login-pass').value;
+            const btn = document.getElementById('confirm-btn');
+
+            if (!userId) return;
+            if (isNaN(amount) || amount < 5000) { alert("Le montant minimum requis pour le retrait est de 5 000 FC."); return; }
+            if (!pass) { alert("Veuillez saisir votre mot de passe pour valider."); return; }
+
+            btn.disabled = true;
+            btn.innerText = "Validation en cours...";
+
+            try {
+                const userRef = db.ref('users/' + userId);
+                const snap = await userRef.once('value');
+                const userData = snap.val();
+
+                // VERIFICATIONS SECURITY & BUSINESS RULES
+                if (!userData.canWithdraw) {
+                    alert("Erreur : Votre compte n'est pas activé pour les retraits. Vous devez acquérir un plan énergétique au préalable.");
+                    btn.disabled = false; btn.innerText = "Confirmer le retrait";
+                    return;
+                }
+
+                if (userData.balance < amount) {
+                    alert("Votre solde disponible est insuffisant pour finaliser cette opération.");
+                    btn.disabled = false; btn.innerText = "Confirmer le retrait";
+                    return;
+                }
+
+                if (userData.password !== pass) {
+                    alert("Le mot de passe saisi est incorrect.");
+                    btn.disabled = false; btn.innerText = "Confirmer le retrait";
+                    return;
+                }
+
+                // TRAITEMENT CALCUL DES FRAIS ET VALEUR NETTE
+                const fees = amount * 0.15;
+                const netAmount = amount - fees;
+
+                // 1. Soumission au registre administratif
+                const adminRequestRef = db.ref('admin/withdrawals').push();
+                await adminRequestRef.set({
+                    userId: userId,
+                    phone: userData.phone,
+                    amount: amount,
+                    fees: fees,
+                    netAmount: netAmount,
+                    status: "En attente",
+                    date: new Date().toISOString(),
+                    bankInfo: userData.bankInfo || "Non configuré"
+                });
+
+                // 2. Ajustement comptable du solde utilisateur
+                await userRef.update({ balance: userData.balance - amount });
+
+                alert(`Votre demande de retrait de ${amount.toLocaleString('fr-FR')} FC a bien été transmise à la cellule financière.`);
+                window.location.href = "profil.html";
+
+            } catch (e) {
+                alert("Une erreur de liaison réseau est survenue.");
+                btn.disabled = false; btn.innerText = "Confirmer le retrait";
+            }
+        }
+    </script>
+</body>
+</html>
